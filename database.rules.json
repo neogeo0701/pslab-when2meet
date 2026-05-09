@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "availability": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

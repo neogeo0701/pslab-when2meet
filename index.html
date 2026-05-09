@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#4f46e5" />
+  <title>PSLAB 회의 시간 조율</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      --primary-50: #f5f3ff;
+      --accent-bg: #fef3c7;
+      --accent-fg: #92400e;
+      --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04);
+      --shadow: 0 1px 3px rgba(17, 24, 39, 0.06), 0 1px 2px rgba(17, 24, 39, 0.04);
+      --shadow-md: 0 4px 12px -2px rgba(17, 24, 39, 0.08), 0 2px 4px -1px rgba(17, 24, 39, 0.04);
+    }
+
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      letter-spacing: -0.01em;
+    }
+
+    button { font-family: inherit; }
+    .hidden { display: none !important; }
+
+    /* ============ Name select screen ============ */
+    #name-select {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .select-card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 40px 32px;
+      box-shadow: var(--shadow-md);
+      max-width: 420px;
+      width: 100%;
+    }
+
+    .select-card .logo {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+      letter-spacing: 0.04em;
+    }
+
+    .select-card h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .select-card .subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .name-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .name-btn {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: var(--text);
+    }
+
+    .name-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .name-btn.all {
+      grid-column: 1 / -1;
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      margin-top: 6px;
+    }
+
+    .name-btn.all:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      color: white;
+    }
+
+    /* ============ Grid screen ============ */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .header-title h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #user-info {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .badge-edit {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .badge-view {
+      background: var(--accent-bg);
+      color: var(--accent-fg);
+    }
+
+    #back-btn {
+      background: white;
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+      white-space: nowrap;
+      transition: all 0.12s;
+    }
+
+    #back-btn:hover {
+      background: var(--bg);
+      border-color: var(--border-strong);
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .week-nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      transition: all 0.12s;
+      padding: 0;
+    }
+
+    .week-nav-btn:hover {
+      background: var(--bg);
+      border-color: var(--border-strong);
+    }
+
+    .week-label {
+      flex: 1;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .week-today-btn {
+      padding: 0 14px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--primary-light);
+      border: 1px solid transparent;
+      color: var(--primary);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.12s;
+      font-family: inherit;
+    }
+
+    .week-today-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .week-today-btn.dim {
+      background: transparent;
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+
+    .week-today-btn.dim:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .day-name { font-size: 13px; line-height: 1.2; }
+    .day-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+    th.day-weekend .day-name { color: var(--primary); }
+    th.day-today { background: linear-gradient(180deg, var(--card) 0%, var(--primary-light) 100%); }
+    th.day-today .day-date { color: var(--primary); font-weight: 700; }
+
+    #grid-container {
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow: auto;
+      max-height: calc(100vh - 250px);
+      position: relative;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #grid-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    #grid-table th, #grid-table td {
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    #grid-table th {
+      position: sticky;
+      top: 0;
+      background: var(--card);
+      padding: 12px 8px;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text);
+      z-index: 3;
+      text-align: center;
+      min-width: 70px;
+    }
+
+    #grid-table thead th:first-child {
+      left: 0;
+      z-index: 4;
+      min-width: 64px;
+      background: var(--card);
+    }
+
+    .day-weekend {
+      color: var(--primary) !important;
+    }
+
+    .time-label {
+      position: sticky;
+      left: 0;
+      background: var(--card);
+      padding: 4px 10px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-align: right;
+      z-index: 2;
+      white-space: nowrap;
+      min-width: 64px;
+    }
+
+    .time-label.half {
+      color: transparent;
+    }
+
+    tr:nth-child(even) .time-label {
+      border-bottom-style: dashed;
+    }
+
+    .cell {
+      width: 70px;
+      height: 26px;
+      background: var(--card);
+      cursor: pointer;
+      transition: background 0.06s ease;
+      touch-action: none;
+    }
+
+    .cell:hover {
+      background: var(--primary-50);
+    }
+
+    .cell.selected {
+      background: var(--primary);
+    }
+
+    .cell.selected:hover {
+      background: var(--primary-hover);
+    }
+
+    .cell.agg-1 { background: rgba(79, 70, 229, 0.18); }
+    .cell.agg-2 { background: rgba(79, 70, 229, 0.42); }
+    .cell.agg-3 { background: rgba(79, 70, 229, 0.7); }
+    .cell.agg-4 { background: rgba(79, 70, 229, 1); }
+
+    .cell.agg-1:hover, .cell.agg-2:hover { background: rgba(79, 70, 229, 0.55); }
+    .cell.agg-3:hover { background: rgba(79, 70, 229, 0.82); }
+    .cell.agg-4:hover { background: var(--primary-hover); }
+
+    /* hour boundary stripe */
+    tr.hour-start td { border-top: 1px solid var(--border); }
+    tr.hour-start .time-label { color: var(--text); font-weight: 600; }
+
+    #info-panel {
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 16px 20px;
+      margin-top: 14px;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    #info-panel strong {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .hint, .info-empty {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .info-names {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .name-tag {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .count {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .legend {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 12px;
+      flex-wrap: wrap;
+      padding: 0 4px;
+    }
+
+    .legend-scale {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .legend-box {
+      width: 20px;
+      height: 14px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+    }
+
+    .conn-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .conn-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d1d5db;
+    }
+
+    .conn-dot.online { background: #10b981; }
+    .conn-dot.offline { background: #ef4444; }
+
+    @media (max-width: 640px) {
+      .cell { width: 44px; height: 24px; }
+      #grid-table th { font-size: 12px; padding: 8px 2px; min-width: 44px; }
+      .time-label { font-size: 10.5px; padding: 4px 6px; min-width: 50px; }
+      #grid-table thead th:first-child { min-width: 50px; }
+      main { padding: 12px; }
+      header { padding: 12px 14px; }
+      .header-title h1 { font-size: 15px; }
+      #user-info { font-size: 11.5px; }
+      .select-card { padding: 32px 22px; }
+      .select-card h1 { font-size: 19px; }
+      #grid-container { max-height: calc(100vh - 300px); }
+      .week-nav { padding: 8px 10px; gap: 6px; }
+      .week-nav-btn { width: 32px; height: 32px; }
+      .week-label { font-size: 13px; }
+      .week-today-btn { height: 32px; padding: 0 10px; font-size: 12px; }
+      .day-name { font-size: 12px; }
+      .day-date { font-size: 10px; }
+    }
+
+    @media (max-width: 380px) {
+      .cell { width: 38px; }
+      #grid-table th { min-width: 38px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <!-- ===== Name select screen ===== -->
+    <section id="name-select">
+      <div class="select-card">
+        <span class="logo">PSLAB</span>
+        <h1>회의 시간 조율</h1>
+        <p class="subtitle">본인을 선택해 가능한 시간을 칠하거나,<br/>전체 보기로 4명 모두의 결과를 확인하세요.</p>
+        <div class="name-buttons" id="name-buttons">
+          <button class="name-btn" data-name="고대현">고대현</button>
+          <button class="name-btn" data-name="김호민">김호민</button>
+          <button class="name-btn" data-name="유준환">유준환</button>
+          <button class="name-btn" data-name="전동훈">전동훈</button>
+          <button class="name-btn all" data-name="__all__">전체 보기</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Grid screen ===== -->
+    <section id="grid-screen" class="hidden">
+      <header>
+        <div class="header-inner">
+          <div class="header-title">
+            <h1>PSLAB 회의 시간 조율</h1>
+            <div id="user-info"></div>
+          </div>
+          <button id="back-btn">← 다시 선택</button>
+        </div>
+      </header>
+
+      <main>
+        <div class="week-nav">
+          <button class="week-nav-btn" id="prev-week" aria-label="이전 주" title="이전 주">‹</button>
+          <div class="week-label" id="week-label"></div>
+          <button class="week-nav-btn" id="next-week" aria-label="다음 주" title="다음 주">›</button>
+          <button class="week-today-btn" id="this-week">이번 주</button>
+        </div>
+        <div id="grid-container">
+          <table id="grid-table"></table>
+        </div>
+        <div id="info-panel">
+          <span class="hint">셀에 마우스를 올리거나 탭하면 누가 가능한지 표시됩니다.</span>
+        </div>
+        <div class="legend" id="legend"></div>
+      </main>
+    </section>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getDatabase, ref, set, onValue, remove, goOnline
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxLqWQ4OLWSZLhGRg91VwTCfemxX56qyY",
+      authDomain: "pslab-meet-3972.firebaseapp.com",
+      databaseURL: "https://pslab-meet-3972-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "pslab-meet-3972",
+      storageBucket: "pslab-meet-3972.firebasestorage.app",
+      messagingSenderId: "592496687165",
+      appId: "1:592496687165:web:e3dc7add9b40c0c3f85254"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // ============ Constants ============
+    const NAMES = ["고대현", "김호민", "유준환", "전동훈"];
+    const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
+    const WEEKEND_IDX = new Set([5, 6]); // Sat, Sun (Mon-start)
+    const TIMES = (() => {
+      const t = [];
+      for (let h = 9; h < 23; h++) {
+        t.push(`${String(h).padStart(2, "0")}:00`);
+        t.push(`${String(h).padStart(2, "0")}:30`);
+      }
+      return t;
+    })();
+
+    // ============ Date helpers ============
+    function getMonday(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const day = d.getDay(); // 0=Sun .. 6=Sat
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      return d;
+    }
+    function addDays(date, n) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + n);
+      return d;
+    }
+    function fmtDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+    function fmtMonthDay(d) {
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+    function fmtWeekRange(monday) {
+      const sun = addDays(monday, 6);
+      const y = monday.getFullYear();
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${y}.${pad(monday.getMonth() + 1)}.${pad(monday.getDate())} - ${pad(sun.getMonth() + 1)}.${pad(sun.getDate())}`;
+    }
+    function dayIdxFromDate(d) {
+      // JS: 0=Sun..6=Sat → Mon-start: 0=Mon..6=Sun
+      return (d.getDay() + 6) % 7;
+    }
+
+    // ============ State ============
+    const availability = Object.fromEntries(NAMES.map(n => [n, {}]));
+    let currentUser = null;        // null when in aggregate view
+    let viewMode = "select";       // "edit" | "aggregate" | "select"
+    let isDragging = false;
+    let dragMode = null;           // "add" | "remove"
+    const touchedCells = new Set();
+    let lastInfoKey = null;
+    let currentWeekStart = getMonday(new Date()); // Monday of currently displayed week
+
+    const $ = (id) => document.getElementById(id);
+
+    // ============ Build grid ============
+    function weekDates() {
+      return Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
+    }
+
+    function buildGrid() {
+      const table = $("grid-table");
+      table.innerHTML = "";
+      const dates = weekDates();
+      const today = fmtDate(new Date());
+
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+      headRow.appendChild(document.createElement("th"));
+      dates.forEach((d, i) => {
+        const th = document.createElement("th");
+        if (WEEKEND_IDX.has(i)) th.classList.add("day-weekend");
+        if (fmtDate(d) === today) th.classList.add("day-today");
+        const nameDiv = document.createElement("div");
+        nameDiv.className = "day-name";
+        nameDiv.textContent = DAY_LABELS[i];
+        const dateDiv = document.createElement("div");
+        dateDiv.className = "day-date";
+        dateDiv.textContent = fmtMonthDay(d);
+        th.appendChild(nameDiv);
+        th.appendChild(dateDiv);
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      TIMES.forEach((time, idx) => {
+        const tr = document.createElement("tr");
+        if (idx % 2 === 0) tr.classList.add("hour-start");
+
+        const timeCell = document.createElement("td");
+        timeCell.className = "time-label";
+        if (idx % 2 === 1) timeCell.classList.add("half");
+        timeCell.textContent = time;
+        tr.appendChild(timeCell);
+
+        dates.forEach((d) => {
+          const td = document.createElement("td");
+          td.className = "cell";
+          td.dataset.key = `${fmtDate(d)}-${time}`;
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+    }
+
+    // ============ Render based on state ============
+    function renderGrid() {
+      document.querySelectorAll(".cell").forEach((cell) => {
+        const key = cell.dataset.key;
+        cell.className = "cell";
+        if (viewMode === "edit") {
+          if (availability[currentUser]?.[key]) cell.classList.add("selected");
+        } else if (viewMode === "aggregate") {
+          let count = 0;
+          for (const n of NAMES) if (availability[n]?.[key]) count++;
+          if (count > 0) cell.classList.add(`agg-${count}`);
+        }
+      });
+      // refresh info panel for last-hovered cell
+      if (lastInfoKey) updateInfoPanel(lastInfoKey);
+    }
+
+    // ============ Info panel ============
+    // key format: "YYYY-MM-DD-HH:MM"
+    function parseKey(key) {
+      return [key.substring(0, 10), key.substring(11)];
+    }
+
+    function updateInfoPanel(key) {
+      const panel = $("info-panel");
+      lastInfoKey = key;
+      if (!key) {
+        panel.innerHTML = '<span class="hint">셀에 마우스를 올리거나 탭하면 누가 가능한지 표시됩니다.</span>';
+        return;
+      }
+      const [dateStr, time] = parseKey(key);
+      const d = new Date(`${dateStr}T00:00:00`);
+      const dayLabel = DAY_LABELS[dayIdxFromDate(d)];
+      const heading = `${dayLabel} ${fmtMonthDay(d)} ${time}`;
+      const available = NAMES.filter((n) => availability[n]?.[key]);
+
+      if (available.length === 0) {
+        panel.innerHTML =
+          `<strong>${heading}</strong>` +
+          `<span class="info-empty">아직 가능한 사람이 없습니다</span>`;
+      } else {
+        const tags = available.map((n) => `<span class="name-tag">${n}</span>`).join("");
+        panel.innerHTML =
+          `<strong>${heading}</strong>` +
+          `<div class="info-names">${tags}<span class="count">${available.length} / ${NAMES.length}</span></div>`;
+      }
+    }
+
+    // ============ Legend ============
+    function renderLegend() {
+      const el = $("legend");
+      if (viewMode === "aggregate") {
+        el.innerHTML =
+          `<span>가능 인원</span>` +
+          `<div class="legend-scale">` +
+            `<span class="legend-box" style="background:#fff"></span>` +
+            `<span class="legend-box" style="background:rgba(79,70,229,0.18)"></span>` +
+            `<span class="legend-box" style="background:rgba(79,70,229,0.42)"></span>` +
+            `<span class="legend-box" style="background:rgba(79,70,229,0.7)"></span>` +
+            `<span class="legend-box" style="background:rgba(79,70,229,1)"></span>` +
+          `</div>` +
+          `<span>0명 → 4명</span>` +
+          `<span style="flex:1"></span>` +
+          `<span class="conn-status"><span class="conn-dot online" id="conn-dot"></span><span id="conn-text">연결됨</span></span>`;
+      } else {
+        el.innerHTML =
+          `<span>드래그로 칠하기 / 다시 드래그하면 해제</span>` +
+          `<span style="flex:1"></span>` +
+          `<span class="conn-status"><span class="conn-dot online" id="conn-dot"></span><span id="conn-text">연결됨</span></span>`;
+      }
+    }
+
+    // ============ Drag handling ============
+    function startDrag(cell) {
+      if (viewMode !== "edit" || !currentUser) return;
+      isDragging = true;
+      touchedCells.clear();
+      const key = cell.dataset.key;
+      const isSelected = !!availability[currentUser][key];
+      dragMode = isSelected ? "remove" : "add";
+      applyDrag(cell);
+    }
+
+    function applyDrag(cell) {
+      if (!isDragging || !cell || !cell.classList.contains("cell")) return;
+      const key = cell.dataset.key;
+      if (touchedCells.has(key)) return;
+      touchedCells.add(key);
+
+      if (dragMode === "add") {
+        availability[currentUser][key] = true;
+        cell.classList.add("selected");
+        set(ref(db, `availability/${currentUser}/${key}`), true).catch(console.error);
+      } else {
+        delete availability[currentUser][key];
+        cell.classList.remove("selected");
+        remove(ref(db, `availability/${currentUser}/${key}`)).catch(console.error);
+      }
+      updateInfoPanel(key);
+    }
+
+    function endDrag() {
+      isDragging = false;
+      touchedCells.clear();
+    }
+
+    // ============ Event wiring ============
+    function attachGridEvents() {
+      const table = $("grid-table");
+
+      // Mouse
+      table.addEventListener("mousedown", (e) => {
+        const cell = e.target.closest(".cell");
+        if (!cell) return;
+        e.preventDefault();
+        startDrag(cell);
+      });
+      table.addEventListener("mouseover", (e) => {
+        const cell = e.target.closest(".cell");
+        if (!cell) return;
+        if (isDragging) applyDrag(cell);
+        updateInfoPanel(cell.dataset.key);
+      });
+      document.addEventListener("mouseup", endDrag);
+
+      // Touch
+      table.addEventListener("touchstart", (e) => {
+        const cell = e.target.closest(".cell");
+        if (!cell) return;
+        e.preventDefault();
+        startDrag(cell);
+        updateInfoPanel(cell.dataset.key);
+      }, { passive: false });
+
+      document.addEventListener("touchmove", (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const t = e.touches[0];
+        if (!t) return;
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        if (!el) return;
+        const cell = el.closest && el.closest(".cell");
+        if (cell) {
+          applyDrag(cell);
+          updateInfoPanel(cell.dataset.key);
+        }
+      }, { passive: false });
+
+      document.addEventListener("touchend", endDrag);
+      document.addEventListener("touchcancel", endDrag);
+
+      // Click for "view" mode (or to update info)
+      table.addEventListener("click", (e) => {
+        const cell = e.target.closest(".cell");
+        if (!cell) return;
+        updateInfoPanel(cell.dataset.key);
+      });
+    }
+
+    // ============ Week navigation ============
+    function isCurrentWeek() {
+      return fmtDate(currentWeekStart) === fmtDate(getMonday(new Date()));
+    }
+    function updateWeekUI() {
+      $("week-label").textContent = fmtWeekRange(currentWeekStart);
+      $("this-week").classList.toggle("dim", isCurrentWeek());
+    }
+    function changeWeek(deltaDays) {
+      // cancel any in-progress drag — different cells appear after rebuild
+      endDrag();
+      currentWeekStart = addDays(currentWeekStart, deltaDays);
+      buildGrid();
+      updateWeekUI();
+      lastInfoKey = null;
+      updateInfoPanel(null);
+      renderGrid();
+    }
+    function goToThisWeek() {
+      endDrag();
+      currentWeekStart = getMonday(new Date());
+      buildGrid();
+      updateWeekUI();
+      lastInfoKey = null;
+      updateInfoPanel(null);
+      renderGrid();
+    }
+
+    // ============ Mode switching ============
+    function selectUser(name) {
+      if (name === "__all__") {
+        currentUser = null;
+        viewMode = "aggregate";
+        $("user-info").innerHTML =
+          `<span class="badge badge-view">전체 보기</span>` +
+          `<span>4명의 가능 시간을 합쳐서 색 농도로 표시합니다</span>`;
+      } else {
+        currentUser = name;
+        viewMode = "edit";
+        $("user-info").innerHTML =
+          `<span class="badge badge-edit">${name}</span>` +
+          `<span>가능한 시간을 드래그로 칠하세요</span>`;
+      }
+      $("name-select").classList.add("hidden");
+      $("grid-screen").classList.remove("hidden");
+      lastInfoKey = null;
+      updateInfoPanel(null);
+      updateWeekUI();
+      renderLegend();
+      renderGrid();
+    }
+
+    function backToSelect() {
+      $("grid-screen").classList.add("hidden");
+      $("name-select").classList.remove("hidden");
+      currentUser = null;
+      viewMode = "select";
+      lastInfoKey = null;
+    }
+
+    // ============ Connection status ============
+    function watchConnection() {
+      onValue(ref(db, ".info/connected"), (snap) => {
+        const dot = $("conn-dot");
+        const text = $("conn-text");
+        if (!dot || !text) return;
+        if (snap.val() === true) {
+          dot.className = "conn-dot online";
+          text.textContent = "실시간 동기화 중";
+        } else {
+          dot.className = "conn-dot offline";
+          text.textContent = "연결 끊김";
+        }
+      });
+    }
+
+    // ============ Firebase data sync ============
+    function watchAvailability() {
+      onValue(ref(db, "availability"), (snap) => {
+        const data = snap.val() || {};
+        for (const n of NAMES) availability[n] = data[n] || {};
+        if (viewMode !== "select") renderGrid();
+      }, (err) => {
+        console.error("Firebase read error:", err);
+      });
+    }
+
+    // ============ Init ============
+    function init() {
+      buildGrid();
+      attachGridEvents();
+
+      document.querySelectorAll(".name-btn").forEach((btn) => {
+        btn.addEventListener("click", () => selectUser(btn.dataset.name));
+      });
+      $("back-btn").addEventListener("click", backToSelect);
+      $("prev-week").addEventListener("click", () => changeWeek(-7));
+      $("next-week").addEventListener("click", () => changeWeek(7));
+      $("this-week").addEventListener("click", goToThisWeek);
+      updateWeekUI();
+
+      goOnline(db);
+      watchAvailability();
+      watchConnection();
+    }
+
+    init();
+  </script>
+</body>
+</html>
