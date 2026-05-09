@@ -2,6 +2,12 @@
 
 PSLAB 공동창업진 4명(고대현 · 김호민 · 유준환 · 전동훈)이 모일 수 있는 시간을 모으는 When2meet 스타일 단일 HTML 웹앱입니다. 별도의 빌드 단계 없이 `index.html` 하나로 동작하며, Firebase Realtime Database로 실시간 동기화됩니다.
 
+## 🌐 배포 사이트
+
+**[https://neogeo0701.github.io/pslab-when2meet/](https://neogeo0701.github.io/pslab-when2meet/)**
+
+GitHub Pages로 자동 배포되며, `main` 브랜치에 push하면 1~2분 후 반영됩니다.
+
 ## 사용법
 
 1. 첫 화면에서 본인 이름을 선택합니다.
