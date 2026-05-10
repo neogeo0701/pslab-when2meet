@@ -582,7 +582,11 @@
     const WEEKEND_IDX = new Set([5, 6]); // Sat, Sun (Mon-start)
     const TIMES = (() => {
       const t = [];
-      for (let h = 9; h < 23; h++) {
+      for (let h = 9; h < 24; h++) {
+        t.push(`${String(h).padStart(2, "0")}:00`);
+        t.push(`${String(h).padStart(2, "0")}:30`);
+      }
+      for (let h = 0; h < 2; h++) {
         t.push(`${String(h).padStart(2, "0")}:00`);
         t.push(`${String(h).padStart(2, "0")}:30`);
       }
